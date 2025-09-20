@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 
 # -------------------------
@@ -80,21 +80,29 @@ if uploaded_file:
     # -------- Trends & Insights --------
     with tabs[0]:
         st.subheader("Delivery Time by Weather & Traffic")
-        fig1 = px.bar(filtered_df, x="Weather", y="Delivery_Time", color="Traffic", barmode="group")
-        st.plotly_chart(fig1, use_container_width=True)
+        plt.figure(figsize=(10,5))
+        sns.barplot(data=filtered_df, x="Weather", y="Delivery_Time", hue="Traffic", ci="sd")
+        st.pyplot(plt.gcf())
+        plt.clf()
 
         st.subheader("Avg Delivery Time by Vehicle")
-        fig2 = px.bar(filtered_df, x="Vehicle", y="Delivery_Time", color="Vehicle")
-        st.plotly_chart(fig2, use_container_width=True)
+        plt.figure(figsize=(8,5))
+        sns.barplot(data=filtered_df, x="Vehicle", y="Delivery_Time", ci="sd")
+        st.pyplot(plt.gcf())
+        plt.clf()
 
         if 'Agent_Rating' in df.columns and 'Agent_Age' in df.columns:
             st.subheader("Agent Rating vs Delivery Time")
-            fig3 = px.scatter(filtered_df, x="Agent_Rating", y="Delivery_Time", color="AgentAgeGroup", size="Agent_Rating")
-            st.plotly_chart(fig3, use_container_width=True)
+            plt.figure(figsize=(10,5))
+            sns.scatterplot(data=filtered_df, x="Agent_Rating", y="Delivery_Time", hue="AgentAgeGroup", palette="deep")
+            st.pyplot(plt.gcf())
+            plt.clf()
 
         st.subheader("Category-wise Delivery Time Distribution")
-        fig4 = px.box(filtered_df, x="Category", y="Delivery_Time", color="Category")
-        st.plotly_chart(fig4, use_container_width=True)
+        plt.figure(figsize=(10,5))
+        sns.boxplot(data=filtered_df, x="Category", y="Delivery_Time")
+        st.pyplot(plt.gcf())
+        plt.clf()
 
     # -------- Predictions --------
     with tabs[1]:
@@ -132,14 +140,19 @@ if uploaded_file:
     # -------- Extra Analysis --------
     with tabs[2]:
         st.subheader("Delivery Time Distribution")
-        fig5 = px.histogram(filtered_df, x="Delivery_Time", nbins=30, marginal="box", color="Traffic")
-        st.plotly_chart(fig5, use_container_width=True)
+        plt.figure(figsize=(8,4))
+        sns.histplot(filtered_df['Delivery_Time'], kde=True, bins=30)
+        st.pyplot(plt.gcf())
+        plt.clf()
 
         st.subheader("% Late Deliveries by Traffic")
         traffic_summary = filtered_df.groupby("Traffic")['LateDeliveryFlag'].mean().reset_index()
         traffic_summary['LateDeliveryFlag'] *= 100
-        fig6 = px.bar(traffic_summary, x="Traffic", y="LateDeliveryFlag", color="Traffic")
-        st.plotly_chart(fig6, use_container_width=True)
+        plt.figure(figsize=(8,4))
+        sns.barplot(data=traffic_summary, x="Traffic", y="LateDeliveryFlag")
+        plt.ylabel("Late Deliveries (%)")
+        st.pyplot(plt.gcf())
+        plt.clf()
 
 else:
     st.info("Please upload a CSV file to start exploring 🚀")
