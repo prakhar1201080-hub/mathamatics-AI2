@@ -3,15 +3,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
 
 # -------------------------
 # Page Config
 # -------------------------
 st.set_page_config(page_title="🚚 Last Mile Delivery Dashboard", layout="wide")
 st.title("🚚 Last Mile Delivery Dashboard")
-st.markdown("Explore, filter, and predict delivery performance interactively!")
+st.markdown("Explore and filter delivery performance interactively!")
 
 # -------------------------
 # File Upload
@@ -49,6 +47,7 @@ if uploaded_file:
     filter_area = st.sidebar.multiselect("Area", options=df['Area'].unique(), default=df['Area'].unique())
     filter_category = st.sidebar.multiselect("Category", options=df['Category'].unique(), default=df['Category'].unique())
 
+    # Apply filters
     filtered_df = df[
         (df['Weather'].isin(filter_weather)) &
         (df['Traffic'].isin(filter_traffic)) &
@@ -65,6 +64,7 @@ if uploaded_file:
     kpi2.metric("⏰ Late Deliveries", f"{filtered_df['LateDeliveryFlag'].mean()*100:.2f}%")
     kpi3.metric("📦 Total Deliveries", f"{len(filtered_df)}")
 
+    # Download filtered data
     st.download_button(
         label="📥 Download Filtered Data",
         data=filtered_df.to_csv(index=False),
@@ -75,7 +75,7 @@ if uploaded_file:
     # -------------------------
     # Visual Tabs
     # -------------------------
-    tabs = st.tabs(["📊 Trends & Insights", "🤖 Predictions", "📈 Extra Analysis"])
+    tabs = st.tabs(["📊 Trends & Insights", "📈 Extra Analysis"])
 
     # -------- Trends & Insights --------
     with tabs[0]:
@@ -104,41 +104,8 @@ if uploaded_file:
         st.pyplot(plt.gcf())
         plt.clf()
 
-    # -------- Predictions --------
-    with tabs[1]:
-        st.subheader("🤖 Predict Late Deliveries")
-
-        # Prepare features
-        feature_cols = ['Weather', 'Traffic', 'Vehicle', 'Area', 'Category']
-        df_enc = pd.get_dummies(df[feature_cols], drop_first=True)
-        X = df_enc
-        y = df['LateDeliveryFlag']
-
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        model = RandomForestClassifier()
-        model.fit(X_train, y_train)
-
-        # User input for prediction
-        st.markdown("### Try 'What-if' Analysis")
-        user_weather = st.selectbox("Weather", df['Weather'].unique())
-        user_traffic = st.selectbox("Traffic", df['Traffic'].unique())
-        user_vehicle = st.selectbox("Vehicle", df['Vehicle'].unique())
-        user_area = st.selectbox("Area", df['Area'].unique())
-        user_category = st.selectbox("Category", df['Category'].unique())
-
-        user_input = pd.DataFrame([[user_weather, user_traffic, user_vehicle, user_area, user_category]],
-                                  columns=feature_cols)
-        user_input_enc = pd.get_dummies(user_input)
-        user_input_enc = user_input_enc.reindex(columns=X.columns, fill_value=0)
-
-        pred = model.predict(user_input_enc)[0]
-        prob = model.predict_proba(user_input_enc)[0][1]
-
-        st.write(f"🔮 Prediction: {'Late Delivery' if pred==1 else 'On-time Delivery'}")
-        st.write(f"📈 Probability of being late: {prob*100:.2f}%")
-
     # -------- Extra Analysis --------
-    with tabs[2]:
+    with tabs[1]:
         st.subheader("Delivery Time Distribution")
         plt.figure(figsize=(8,4))
         sns.histplot(filtered_df['Delivery_Time'], kde=True, bins=30)
